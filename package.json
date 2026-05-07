@@ -1,0 +1,35 @@
+{
+  "name": "castleinventoryax",
+  "version": "1.0.0",
+  "description": "CastleInventoryAX — master inventory system for the Castle ecosystem",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "serve": "bash start.sh",
+    "client:dev": "npm --prefix client run dev",
+    "dev:all": "concurrently \"npm run dev\" \"npm run client:dev\"",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "db:seed": "ts-node src/seed/seed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1",
+    "pg": "^8.13.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.6.0",
+    "@types/pg": "^8.11.10",
+    "@types/supertest": "^7.2.0",
+    "jest": "^30.3.0",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}
