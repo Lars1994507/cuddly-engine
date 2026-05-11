@@ -6,9 +6,16 @@
 #
 # All demo IDs contain -DEMO- to keep them isolated from other data.
 # Shared nodes intentionally included to test diagram deduplication:
-#   AA-MENU-STATUS-ENUM-DEMO-V001  → used in 2 compounds
+#   AA-MENU-STATUS-ENUM-DEMO-V001  → used in 2 compounds, 1 composite, 1 service
 #   CMPD-PRICE-FORMAT-DEMO-V001    → used in 2 composites
 #   CS-AUTH-DEMO-V001              → used in 2 castle units
+#
+# Atomic Asset usage coverage (tests all three "Used In" dropdowns):
+#   AA-FORMAT-PRICE-DEMO-V001        → 1 Cmpd · 1 Comp · 1 Svc
+#   AA-MENU-STATUS-ENUM-DEMO-V001    → 2 Cmpd · 1 Comp · 1 Svc
+#   AA-ORDER-STATUS-ENUM-DEMO-V001   → 1 Cmpd · 1 Comp · 1 Svc
+#   AA-CHECK-AVAILABILITY-DEMO-V001  → 1 Cmpd · 1 Comp
+#   AA-CALC-LOYALTY-POINTS-DEMO-V001 → 1 Cmpd · 1 Svc
 
 [AtomicAsset]
 id,name,asset_type,description,code_location,version,status
@@ -51,6 +58,8 @@ COMP-LOYALTY-DASHBOARD-DEMO-V001,CMPD-LOYALTY-CALC-DEMO-V001
 composite_id,atomic_asset_id
 COMP-MENU-DISPLAY-DEMO-V001,AA-MENU-STATUS-ENUM-DEMO-V001
 COMP-LOYALTY-DASHBOARD-DEMO-V001,AA-ORDER-STATUS-ENUM-DEMO-V001
+COMP-ORDER-FORM-DEMO-V001,AA-FORMAT-PRICE-DEMO-V001
+COMP-ORDER-FORM-DEMO-V001,AA-CHECK-AVAILABILITY-DEMO-V001
 
 [CastleService]
 id,name,capability,status
@@ -59,11 +68,26 @@ CS-ORDER-DEMO-V001,Order Castle Service,Handles order creation processing status
 CS-AUTH-DEMO-V001,Auth Castle Service,Staff authentication login sessions and role-based access management,Active
 CS-LOYALTY-DEMO-V001,Loyalty Castle Service,Tracks customer loyalty points tier progression and reward redemption,Active
 
+[CastleServiceAtomicAsset]
+castle_service_id,atomic_asset_id
+CS-MENU-DEMO-V001,AA-FORMAT-PRICE-DEMO-V001
+CS-MENU-DEMO-V001,AA-MENU-STATUS-ENUM-DEMO-V001
+CS-ORDER-DEMO-V001,AA-ORDER-STATUS-ENUM-DEMO-V001
+CS-LOYALTY-DEMO-V001,AA-CALC-LOYALTY-POINTS-DEMO-V001
+
 [CastleServiceComposite]
 castle_service_id,composite_id
 CS-MENU-DEMO-V001,COMP-MENU-DISPLAY-DEMO-V001
 CS-ORDER-DEMO-V001,COMP-ORDER-FORM-DEMO-V001
 CS-LOYALTY-DEMO-V001,COMP-LOYALTY-DASHBOARD-DEMO-V001
+
+[CastleServiceCompound]
+castle_service_id,compound_id
+CS-MENU-DEMO-V001,CMPD-PRICE-FORMAT-DEMO-V001
+CS-MENU-DEMO-V001,CMPD-AVAILABILITY-CHECK-DEMO-V001
+CS-ORDER-DEMO-V001,CMPD-AVAILABILITY-CHECK-DEMO-V001
+CS-ORDER-DEMO-V001,CMPD-LOYALTY-CALC-DEMO-V001
+CS-LOYALTY-DEMO-V001,CMPD-LOYALTY-CALC-DEMO-V001
 
 [CastleUnit]
 id,name,description,permission_scope,status
@@ -78,6 +102,12 @@ CU-MENU-MGMT-DEMO-V001,CS-AUTH-DEMO-V001
 CU-ORDER-PROCESSING-DEMO-V001,CS-ORDER-DEMO-V001
 CU-ORDER-PROCESSING-DEMO-V001,CS-AUTH-DEMO-V001
 CU-CUSTOMER-LOYALTY-DEMO-V001,CS-LOYALTY-DEMO-V001
+
+[CastleUnitComposite]
+castle_unit_id,composite_id
+CU-MENU-MGMT-DEMO-V001,COMP-MENU-DISPLAY-DEMO-V001
+CU-ORDER-PROCESSING-DEMO-V001,COMP-ORDER-FORM-DEMO-V001
+CU-CUSTOMER-LOYALTY-DEMO-V001,COMP-LOYALTY-DASHBOARD-DEMO-V001
 
 [Blueprint]
 id,name,category,version,purpose,status

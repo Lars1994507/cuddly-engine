@@ -1972,11 +1972,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\LoganCarpenter\\Pictures\\CasteInventoryXO\\backend-dotnet\\CastleInventoryAX.csproj",
+      "projectUniqueName": "C:\\Users\\LoganCarpenter\\OneDrive - Inpivota\\Pictures\\CasteInventoryXO\\backend-dotnet\\CastleInventoryAX.csproj",
       "projectName": "CastleInventoryAX",
-      "projectPath": "C:\\Users\\LoganCarpenter\\Pictures\\CasteInventoryXO\\backend-dotnet\\CastleInventoryAX.csproj",
+      "projectPath": "C:\\Users\\LoganCarpenter\\OneDrive - Inpivota\\Pictures\\CasteInventoryXO\\backend-dotnet\\CastleInventoryAX.csproj",
       "packagesPath": "C:\\Users\\LoganCarpenter\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\LoganCarpenter\\Pictures\\CasteInventoryXO\\backend-dotnet\\obj\\",
+      "outputPath": "C:\\Users\\LoganCarpenter\\OneDrive - Inpivota\\Pictures\\CasteInventoryXO\\backend-dotnet\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\LoganCarpenter\\AppData\\Roaming\\NuGet\\NuGet.Config"

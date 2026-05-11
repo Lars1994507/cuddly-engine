@@ -89,7 +89,45 @@ public class AtomicAssetsController(AppDbContext db) : ControllerBase
             var q = db.AtomicAssets.AsQueryable();
             if (asset_type != null) q = q.Where(a => a.AssetType == asset_type);
             if (status != null) q = q.Where(a => a.Status == status);
-            return Ok(await q.ToListAsync());
+            var assets = await q.ToListAsync();
+
+            var ids = assets.Select(a => a.AtomicAssetId).ToList();
+            var compoundCounts = await db.CompoundAtomicAssets
+                .Where(r => ids.Contains(r.AtomicAssetId))
+                .GroupBy(r => r.AtomicAssetId)
+                .Select(g => new { Id = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Id, x => x.Count);
+            var compositeCounts = await db.CompositeAtomicAssets
+                .Where(r => ids.Contains(r.AtomicAssetId))
+                .GroupBy(r => r.AtomicAssetId)
+                .Select(g => new { Id = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Id, x => x.Count);
+            var serviceCounts = await db.CastleServiceAtomicAssets
+                .Where(r => ids.Contains(r.AtomicAssetId))
+                .GroupBy(r => r.AtomicAssetId)
+                .Select(g => new { Id = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Id, x => x.Count);
+
+            var result = assets.Select(a =>
+            {
+                int cc = compoundCounts.GetValueOrDefault(a.AtomicAssetId, 0);
+                int sc = compositeCounts.GetValueOrDefault(a.AtomicAssetId, 0);
+                int sv = serviceCounts.GetValueOrDefault(a.AtomicAssetId, 0);
+                int total = cc + sc + sv;
+                var parts = new List<string>();
+                if (cc > 0) parts.Add($"{cc} Cmpd");
+                if (sc > 0) parts.Add($"{sc} Comp");
+                if (sv > 0) parts.Add($"{sv} Svc");
+                return new
+                {
+                    a.AtomicAssetId, a.Name, a.AssetType, a.Description, a.CodeLocation,
+                    a.Version, a.Status, a.Dependencies, a.ValidationNotes, a.ApprovedPatternNotes,
+                    a.CreatedAt, a.UpdatedAt,
+                    usage_count = total,
+                    usage_summary = parts.Count > 0 ? string.Join(" · ", parts) : "—",
+                };
+            });
+            return Ok(result);
         }
         catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
     }
@@ -143,5 +181,26 @@ public class AtomicAssetsController(AppDbContext db) : ControllerBase
         entity.Status = "Archived";
         await db.SaveChangesAsync();
         return Ok(entity);
+    }
+
+    [HttpGet("{id}/compounds")]
+    public async Task<IActionResult> ListCompounds(string id)
+    {
+        var rows = await db.CompoundAtomicAssets.Where(r => r.AtomicAssetId == id).Include(r => r.Compound).ToListAsync();
+        return Ok(rows.Select(r => r.Compound));
+    }
+
+    [HttpGet("{id}/composites")]
+    public async Task<IActionResult> ListComposites(string id)
+    {
+        var rows = await db.CompositeAtomicAssets.Where(r => r.AtomicAssetId == id).Include(r => r.Composite).ToListAsync();
+        return Ok(rows.Select(r => r.Composite));
+    }
+
+    [HttpGet("{id}/castle-services")]
+    public async Task<IActionResult> ListCastleServices(string id)
+    {
+        var rows = await db.CastleServiceAtomicAssets.Where(r => r.AtomicAssetId == id).Include(r => r.CastleService).ToListAsync();
+        return Ok(rows.Select(r => r.CastleService));
     }
 }

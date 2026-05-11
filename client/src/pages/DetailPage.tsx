@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import type { EntityConfig, Field, RelConfig } from '../config';
+import { ENTITY_CONFIGS } from '../config';
 import {
   fetchById,
   fetchRelationship,
@@ -14,6 +15,7 @@ import {
   deleteLocalMod,
 } from '../api';
 import StatusBadge from '../components/StatusBadge';
+import ChipDetail from '../components/ChipDetail';
 
 const REVIEW_STATUSES = ['Pending', 'Approved', 'Rejected'];
 const PROMOTION_RECS = [
@@ -217,6 +219,9 @@ export default function DetailPage({ config }: { config: EntityConfig }) {
   const [showModForm, setShowModForm] = useState(false);
   const [editingMod, setEditingMod] = useState<LocalMod | null>(null);
   const [deletingMod, setDeletingMod] = useState<string | null>(null);
+
+  // Click-to-expand rel detail state
+  const [expandedRelKey, setExpandedRelKey] = useState<string | null>(null);
 
   const refreshRels = useCallback(() => setRelVersion((v) => v + 1), []);
 
@@ -512,32 +517,64 @@ export default function DetailPage({ config }: { config: EntityConfig }) {
                 const relStatus = item['status'] ? String(item['status']) : '';
                 const secondary = rel.secondaryField ? String(item[rel.secondaryField] ?? '') : '';
                 const removeKey = `${rel.label}:${relId}`;
+                const relKey = `${rel.label}:${relId}`;
+                const isExpanded = expandedRelKey === relKey;
+                const relEntityConfig = rel.targetPath
+                  ? ENTITY_CONFIGS.find((c) => c.path === rel.targetPath) ?? null
+                  : null;
                 return (
-                  <div key={relId} className="rel-item">
-                    <div>
-                      {rel.targetPath ? (
-                        <Link to={`${rel.targetPath}/${encodeURIComponent(relId)}`} className="rel-name">
-                          {relName}
-                        </Link>
-                      ) : (
-                        <span className="rel-name no-link">{relName}</span>
-                      )}
-                      {secondary && <div className="rel-secondary">{secondary}</div>}
+                  <Fragment key={relId}>
+                    <div className="rel-item">
+                      <div>
+                        {relEntityConfig && rel.targetPath ? (
+                          <div className="rel-name-row">
+                            <button
+                              className="inline-rel-name-btn"
+                              onClick={() => setExpandedRelKey(isExpanded ? null : relKey)}
+                            >
+                              {relName}
+                            </button>
+                            <Link
+                              to={`${rel.targetPath}/${encodeURIComponent(relId)}`}
+                              className="rel-nav-link"
+                              title="Open full page"
+                            >
+                              ↗
+                            </Link>
+                          </div>
+                        ) : rel.targetPath ? (
+                          <Link to={`${rel.targetPath}/${encodeURIComponent(relId)}`} className="rel-name">
+                            {relName}
+                          </Link>
+                        ) : (
+                          <span className="rel-name no-link">{relName}</span>
+                        )}
+                        {secondary && <div className="rel-secondary">{secondary}</div>}
+                      </div>
+                      <div className="rel-right">
+                        {relStatus && <StatusBadge status={relStatus} />}
+                        {rel.manageable && (
+                          <button
+                            className="btn-icon"
+                            title={`Remove from ${rel.label}`}
+                            disabled={removing.has(removeKey)}
+                            onClick={() => { void handleRemoveRel(rel, relId); }}
+                          >
+                            {removing.has(removeKey) ? '…' : '×'}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="rel-right">
-                      {relStatus && <StatusBadge status={relStatus} />}
-                      {rel.manageable && (
-                        <button
-                          className="btn-icon"
-                          title={`Remove from ${rel.label}`}
-                          disabled={removing.has(removeKey)}
-                          onClick={() => { void handleRemoveRel(rel, relId); }}
-                        >
-                          {removing.has(removeKey) ? '…' : '×'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                    {isExpanded && relEntityConfig && (
+                      <div className="rel-item-detail">
+                        <ChipDetail
+                          config={relEntityConfig}
+                          id={relId}
+                          onClose={() => setExpandedRelKey(null)}
+                        />
+                      </div>
+                    )}
+                  </Fragment>
                 );
               })
             )}

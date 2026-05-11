@@ -1,22 +1,24 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, Fragment } from 'react';
+import { Link } from 'react-router-dom';
 import type { EntityConfig } from '../config';
 import { fetchList } from '../api';
 import StatusBadge from '../components/StatusBadge';
+import InlineDetail from '../components/InlineDetail';
 
 export default function ListPage({ config }: { config: EntityConfig }) {
-  const navigate = useNavigate();
   const [items, setItems] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
     setError(null);
     setSearch('');
     setFilters({});
+    setExpandedId(null);
   }, [config.key]);
 
   useEffect(() => {
@@ -38,6 +40,10 @@ export default function ListPage({ config }: { config: EntityConfig }) {
       : '';
     return name.includes(q) || id.includes(q) || secondary.includes(q);
   });
+
+  function toggleExpand(rowId: string) {
+    setExpandedId((prev) => (prev === rowId ? null : rowId));
+  }
 
   return (
     <div>
@@ -90,6 +96,7 @@ export default function ListPage({ config }: { config: EntityConfig }) {
           <table>
             <thead>
               <tr>
+                <th className="expand-th"></th>
                 {config.columns.map((col) => (
                   <th key={col.key}>{col.label}</th>
                 ))}
@@ -98,26 +105,43 @@ export default function ListPage({ config }: { config: EntityConfig }) {
             <tbody>
               {displayed.map((item) => {
                 const rowId = String(item[config.idField] ?? '');
+                const isExpanded = expandedId === rowId;
                 return (
-                  <tr
-                    key={rowId}
-                    onClick={() => navigate(`${config.path}/${encodeURIComponent(rowId)}`)}
-                  >
-                    {config.columns.map((col) => {
-                      const val = item[col.key];
-                      return (
-                        <td key={col.key}>
-                          {col.key === 'status' ? (
-                            <StatusBadge status={String(val ?? '')} />
-                          ) : col.key === config.idField ? (
-                            <span className="cell-id">{String(val ?? '—')}</span>
-                          ) : (
-                            String(val ?? '—')
-                          )}
+                  <Fragment key={rowId}>
+                    <tr
+                      className={isExpanded ? 'row-selected' : ''}
+                      onClick={() => toggleExpand(rowId)}
+                    >
+                      <td className="expand-toggle-cell">
+                        <span className={`expand-chevron${isExpanded ? ' open' : ''}`}>›</span>
+                      </td>
+                      {config.columns.map((col) => {
+                        const val = item[col.key];
+                        return (
+                          <td key={col.key}>
+                            {col.key === 'status' ? (
+                              <StatusBadge status={String(val ?? '')} />
+                            ) : col.key === config.idField ? (
+                              <span className="cell-id">{String(val ?? '—')}</span>
+                            ) : (
+                              String(val ?? '—')
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                    {isExpanded && (
+                      <tr className="expand-row">
+                        <td colSpan={config.columns.length + 1} className="expand-cell">
+                          <InlineDetail
+                            config={config}
+                            id={rowId}
+                            onClose={() => setExpandedId(null)}
+                          />
                         </td>
-                      );
-                    })}
-                  </tr>
+                      </tr>
+                    )}
+                  </Fragment>
                 );
               })}
             </tbody>

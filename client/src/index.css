@@ -155,6 +155,56 @@ tbody tr:hover { background: #161b22; }
 .bom-section { padding: 0.25rem 0 0.1rem; }
 .bom-section-label { font-size: 0.67rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #484f58; padding: 0.3rem 0 0.1rem; }
 
+/* Expand chevron column */
+.expand-th { width: 28px; padding: 0 0 0 0.75rem !important; }
+.expand-toggle-cell { width: 28px; padding: 0.6rem 0.25rem 0.6rem 0.75rem !important; }
+.expand-chevron { display: inline-block; color: #484f58; font-size: 1rem; line-height: 1; transition: transform 0.15s, color 0.1s; user-select: none; }
+.expand-chevron.open { transform: rotate(90deg); color: #58a6ff; }
+
+/* Selected (expanded) data row */
+tbody tr.row-selected { background: #161b22; }
+tbody tr.row-selected .expand-chevron { color: #58a6ff; }
+
+/* Expansion content row */
+.expand-row { cursor: default !important; }
+.expand-row:hover { background: transparent !important; }
+.expand-cell {
+  padding: 0 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  max-width: none !important;
+  border-left: 3px solid #1f6feb !important;
+  border-bottom: 2px solid #1f6feb !important;
+}
+
+/* Inline detail panel */
+.inline-detail { padding: 1.1rem 1.4rem 1.3rem; background: #0a0f15; }
+.inline-detail-status { padding: 0.9rem 1.4rem; color: #6e7681; font-size: 0.83rem; }
+.inline-detail-status.error { color: #f85149; }
+.inline-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #21262d;
+}
+.inline-detail-title { font-size: 0.92rem; font-weight: 600; flex: 1; min-width: 0; }
+.inline-detail-id { font-family: monospace; font-size: 0.72rem; color: #6e7681; margin-left: 0.5rem; font-weight: 400; }
+.inline-detail-actions { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; flex-shrink: 0; }
+.btn-sm { font-size: 0.74rem !important; padding: 0.2rem 0.58rem !important; }
+.inline-detail-body { display: flex; flex-direction: column; gap: 1rem; }
+.inline-section { }
+.inline-section-label { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #484f58; margin-bottom: 0.5rem; }
+.inline-section-count { font-weight: 400; color: #6e7681; margin-left: 0.35rem; }
+.inline-rel-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.inline-rel-chip { display: flex; align-items: center; gap: 0.4rem; background: #161b22; border: 1px solid #30363d; border-radius: 5px; padding: 0.22rem 0.6rem; font-size: 0.78rem; }
+.inline-rel-name { color: #58a6ff; text-decoration: none; font-weight: 500; }
+.inline-rel-name:hover { text-decoration: underline; }
+.inline-rel-name.no-link { color: #e6edf3; }
+.inline-rel-secondary { color: #6e7681; font-size: 0.72rem; }
+
 /* Settings page */
 .settings-section { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
 .settings-danger-section { border-color: rgba(248,81,73,0.35); }
@@ -174,3 +224,40 @@ tbody tr:hover { background: #161b22; }
 .settings-feedback { margin-top: 0.75rem; padding: 0.55rem 0.9rem; border-radius: 6px; font-size: 0.82rem; }
 .settings-feedback-ok { background: #0f2b1a; border: 1px solid #2ea043; color: #3fb950; }
 .settings-feedback-err { background: #2d0f0e; border: 1px solid #f85149; color: #f85149; }
+
+/* Chip expand button (replaces <Link> inside inline-rel-chip) */
+.chip-expand-btn { background: none; border: none; padding: 0; margin: 0; cursor: pointer; color: #58a6ff; font-size: 0.78rem; font-weight: 500; font-family: inherit; line-height: inherit; }
+.chip-expand-btn:hover { text-decoration: underline; }
+.chip-nav-link { color: #484f58; text-decoration: none; font-size: 0.68rem; line-height: 1; padding: 0 1px; }
+.chip-nav-link:hover { color: #8b949e; }
+.inline-rel-chip.chip-active { border-color: #1f6feb; background: #12191f; }
+
+/* ChipDetail — nested entity detail panel */
+.chip-detail { background: #0e151e; border: 1px solid #1f6feb; border-radius: 6px; padding: 0.7rem 0.9rem; margin-top: 0.45rem; }
+.chip-detail-status { padding: 0.45rem 0.7rem; font-size: 0.78rem; color: #6e7681; border: 1px solid #21262d; border-radius: 6px; margin-top: 0.45rem; }
+.chip-detail-error { color: #f85149 !important; }
+.chip-detail-header { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.6rem; padding-bottom: 0.5rem; border-bottom: 1px solid #21262d; }
+.chip-detail-title { flex: 1; font-size: 0.83rem; font-weight: 600; display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap; min-width: 0; }
+.chip-detail-id { font-family: monospace; font-size: 0.7rem; color: #6e7681; font-weight: 400; }
+.chip-detail-actions { display: flex; align-items: center; gap: 0.35rem; flex-shrink: 0; }
+.chip-detail-body { display: flex; flex-direction: column; gap: 0.65rem; }
+.chip-detail-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.4rem 1.2rem; }
+.chip-detail-field { display: flex; flex-direction: column; gap: 0.1rem; }
+.chip-detail-field-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #484f58; }
+.chip-detail-field-value { font-size: 0.78rem; color: #c9d1d9; word-break: break-word; }
+.chip-detail-section { }
+.chip-detail-section-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #484f58; margin-bottom: 0.3rem; }
+.chip-detail-section-count { font-weight: 400; color: #6e7681; margin-left: 0.3rem; }
+.chip-detail-section-items { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.chip-detail-pill { background: #21262d; border: 1px solid #30363d; border-radius: 4px; padding: 2px 8px; font-size: 0.73rem; color: #8b949e; }
+.chip-detail-pill-btn { cursor: pointer; font-family: inherit; }
+.chip-detail-pill-btn:hover { background: #30363d; border-color: #58a6ff; color: #c9d1d9; }
+.chip-detail-pill-btn.chip-active { background: #1f3c5c; border-color: #1f6feb; color: #58a6ff; }
+
+/* DetailPage rel-item expand */
+.rel-name-row { display: flex; align-items: center; gap: 0.35rem; }
+.inline-rel-name-btn { background: none; border: none; padding: 0; margin: 0; cursor: pointer; font-size: 0.83rem; font-weight: 500; color: #58a6ff; font-family: inherit; line-height: inherit; }
+.inline-rel-name-btn:hover { text-decoration: underline; }
+.rel-nav-link { color: #484f58; text-decoration: none; font-size: 0.72rem; }
+.rel-nav-link:hover { color: #8b949e; }
+.rel-item-detail { padding: 0.35rem 1rem 0.75rem; background: #0a0f15; }

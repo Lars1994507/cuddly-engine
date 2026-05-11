@@ -203,6 +203,18 @@ public class DemoController(AppDbContext db) : ControllerBase
             counts["castle_services"] = csSec.Rows.Count;
         }
 
+        // CastleService → AtomicAsset
+        if (s.TryGetValue("CastleServiceAtomicAsset", out var csAaSec))
+        {
+            foreach (var row in csAaSec.Rows)
+                db.CastleServiceAtomicAssets.Add(new CastleServiceAtomicAsset
+                {
+                    CastleServiceId = F(row, csAaSec.Headers, "castle_service_id"),
+                    AtomicAssetId = F(row, csAaSec.Headers, "atomic_asset_id"),
+                });
+            await db.SaveChangesAsync();
+        }
+
         // CastleService → Composite
         if (s.TryGetValue("CastleServiceComposite", out var csCompSec))
         {
@@ -211,6 +223,18 @@ public class DemoController(AppDbContext db) : ControllerBase
                 {
                     CastleServiceId = F(row, csCompSec.Headers, "castle_service_id"),
                     CompositeId = F(row, csCompSec.Headers, "composite_id"),
+                });
+            await db.SaveChangesAsync();
+        }
+
+        // CastleService → Compound
+        if (s.TryGetValue("CastleServiceCompound", out var csCpdSec))
+        {
+            foreach (var row in csCpdSec.Rows)
+                db.CastleServiceCompounds.Add(new CastleServiceCompound
+                {
+                    CastleServiceId = F(row, csCpdSec.Headers, "castle_service_id"),
+                    CompoundId = F(row, csCpdSec.Headers, "compound_id"),
                 });
             await db.SaveChangesAsync();
         }
@@ -241,6 +265,18 @@ public class DemoController(AppDbContext db) : ControllerBase
                 {
                     CastleUnitId = F(row, cuSvcSec.Headers, "castle_unit_id"),
                     CastleServiceId = F(row, cuSvcSec.Headers, "castle_service_id"),
+                });
+            await db.SaveChangesAsync();
+        }
+
+        // CastleUnit → Composite
+        if (s.TryGetValue("CastleUnitComposite", out var cuCompSec))
+        {
+            foreach (var row in cuCompSec.Rows)
+                db.CastleUnitComposites.Add(new CastleUnitComposite
+                {
+                    CastleUnitId = F(row, cuCompSec.Headers, "castle_unit_id"),
+                    CompositeId = F(row, cuCompSec.Headers, "composite_id"),
                 });
             await db.SaveChangesAsync();
         }

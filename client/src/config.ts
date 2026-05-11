@@ -518,6 +518,7 @@ export const ENTITY_CONFIGS: EntityConfig[] = [
       { key: 'asset_type', label: 'Type' },
       { key: 'version', label: 'Version' },
       { key: 'status', label: 'Status' },
+      { key: 'usage_summary', label: 'Used In' },
     ],
     fields: [
       { key: 'atomic_asset_id', label: 'Atomic Asset ID' },
@@ -545,7 +546,11 @@ export const ENTITY_CONFIGS: EntityConfig[] = [
       { key: 'approved_pattern_notes', label: 'Approved Pattern Notes', type: 'textarea' },
       { key: 'status', label: 'Status', type: 'select', options: STATUS_OPTIONS },
     ],
-    rels: [],
+    rels: [
+      { label: 'Used in Compounds', apiSuffix: 'compounds', targetPath: '/compounds', idField: 'compound_id', nameField: 'name', secondaryField: 'version' },
+      { label: 'Used in Composites', apiSuffix: 'composites', targetPath: '/composites', idField: 'composite_id', nameField: 'name', secondaryField: 'ui_backend_scope' },
+      { label: 'Used in Castle Services', apiSuffix: 'castle-services', targetPath: '/castle-services', idField: 'castle_service_id', nameField: 'name', secondaryField: 'capability' },
+    ],
     filters: [
       { key: 'status', label: 'Status', options: STATUS_OPTIONS },
       {
