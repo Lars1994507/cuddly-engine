@@ -9,6 +9,7 @@ import {
   type DemoCounts,
 } from '../api';
 import StatusBadge from '../components/StatusBadge';
+import { useTheme, THEMES } from '../hooks/useTheme';
 
 const DEMO_CASTLE_ID = 'CSTL-BREW-GRIND-DEMO-V001';
 
@@ -26,6 +27,7 @@ const ENTITY_LABELS: [keyof DemoCounts, string][] = [
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   const [status, setStatus] = useState<DemoStatus | null>(null);
   const [busy, setBusy] = useState(false);
@@ -93,6 +95,23 @@ export default function SettingsPage() {
     <div className="page-container" style={{ maxWidth: 720 }}>
       <h1 className="page-title">Settings</h1>
 
+      {/* ── Appearance ────────────────────────────────────────────────── */}
+      <section className="settings-section">
+        <h2 className="settings-section-title">Appearance</h2>
+        <p className="settings-description">Choose a color theme for the interface.</p>
+        <div className="settings-button-row" style={{ marginBottom: 0 }}>
+          {THEMES.map((t) => (
+            <button
+              key={t.id}
+              className={`btn ${theme === t.id ? 'btn-accent' : 'btn-secondary'}`}
+              onClick={() => setTheme(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
       {/* ── Demo Data ─────────────────────────────────────────────────── */}
       <section className="settings-section">
         <h2 className="settings-section-title">Demo Data</h2>
@@ -105,7 +124,7 @@ export default function SettingsPage() {
         {/* Status badge */}
         <div className="settings-status-row">
           <StatusBadge status={loaded ? 'Active' : 'Draft'} />
-          <span style={{ marginLeft: '0.5rem', color: '#8b949e', fontSize: '0.82rem' }}>
+          <span style={{ marginLeft: '0.5rem', color: 'var(--text-sec)', fontSize: '0.82rem' }}>
             {loaded ? 'Demo data loaded' : 'Not loaded'}
           </span>
           {loaded && counts && (

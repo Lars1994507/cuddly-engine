@@ -16,6 +16,8 @@ import {
 } from '../api';
 import StatusBadge from '../components/StatusBadge';
 import ChipDetail from '../components/ChipDetail';
+import CopyButton from '../components/CopyButton';
+import RelPicker from '../components/RelPicker';
 
 const REVIEW_STATUSES = ['Pending', 'Approved', 'Rejected'];
 const PROMOTION_RECS = [
@@ -62,6 +64,9 @@ function AssignRow({
   onSave,
   onClear,
   saving,
+  searchApiPath,
+  searchIdField,
+  searchNameField,
 }: {
   label: string;
   currentId: string;
@@ -70,19 +75,37 @@ function AssignRow({
   onSave: () => void;
   onClear: () => void;
   saving: boolean;
+  searchApiPath?: string;
+  searchIdField?: string;
+  searchNameField?: string;
 }) {
+  const hasPending = inputValue && inputValue !== currentId;
   return (
     <div className="assign-row">
       <div className="assign-label">{label}</div>
-      <div className="assign-value">{currentId || '—'}</div>
-      <input
-        className="form-input"
-        style={{ flex: 1, maxWidth: 320 }}
-        value={inputValue}
-        onChange={(e) => onInputChange(e.target.value)}
-        placeholder={`New ${label} ID`}
-      />
-      <button className="btn btn-secondary" style={{ flexShrink: 0 }} onClick={onSave} disabled={saving}>
+      <div className="assign-value">
+        <span className="assign-current">{currentId || '—'}</span>
+        {hasPending && <span className="assign-pending">→ {inputValue}</span>}
+      </div>
+      {searchApiPath && searchIdField && searchNameField ? (
+        <RelPicker
+          apiPath={searchApiPath}
+          idField={searchIdField}
+          nameField={searchNameField}
+          placeholder={`Search ${label}…`}
+          disabled={saving}
+          onSelect={onInputChange}
+        />
+      ) : (
+        <input
+          className="form-input"
+          style={{ flex: 1, maxWidth: 320 }}
+          value={inputValue}
+          onChange={(e) => onInputChange(e.target.value)}
+          placeholder={`New ${label} ID`}
+        />
+      )}
+      <button className="btn btn-secondary" style={{ flexShrink: 0 }} onClick={onSave} disabled={saving || !inputValue}>
         {saving ? '…' : 'Set'}
       </button>
       <button className="btn btn-secondary" style={{ flexShrink: 0, color: '#6e7681' }} onClick={onClear} disabled={saving}>
@@ -204,7 +227,6 @@ export default function DetailPage({ config }: { config: EntityConfig }) {
   const [archiving, setArchiving] = useState(false);
 
   // Relationship add state
-  const [addInput, setAddInput] = useState<Record<string, string>>({});
   const [addError, setAddError] = useState<Record<string, string>>({});
   const [addLoading, setAddLoading] = useState<Record<string, boolean>>({});
   const [removing, setRemoving] = useState<Set<string>>(new Set());
@@ -263,18 +285,12 @@ export default function DetailPage({ config }: { config: EntityConfig }) {
     }
   }
 
-  async function handleAddRel(rel: RelConfig) {
+  async function handleAddRelWithId(rel: RelConfig, relId: string) {
     if (!id) return;
-    const val = (addInput[rel.label] ?? '').trim();
-    if (!val) {
-      setAddError((p) => ({ ...p, [rel.label]: 'ID is required' }));
-      return;
-    }
     setAddLoading((p) => ({ ...p, [rel.label]: true }));
     setAddError((p) => ({ ...p, [rel.label]: '' }));
     try {
-      await addRelationship(config.apiPath, id, rel.apiSuffix, { [rel.idField]: val });
-      setAddInput((p) => ({ ...p, [rel.label]: '' }));
+      await addRelationship(config.apiPath, id, rel.apiSuffix, { [rel.idField]: relId });
       refreshRels();
     } catch (err: unknown) {
       setAddError((p) => ({ ...p, [rel.label]: (err as Error).message }));
@@ -359,7 +375,10 @@ export default function DetailPage({ config }: { config: EntityConfig }) {
       <div className="detail-header">
         <div>
           <div className="detail-title">{name}</div>
-          <div className="detail-id">{id}</div>
+          <div className="detail-id-row">
+            <span className="detail-id">{id}</span>
+            <CopyButton text={id ?? ''} />
+          </div>
         </div>
         <StatusBadge status={status} />
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginLeft: 'auto' }}>
@@ -395,6 +414,9 @@ export default function DetailPage({ config }: { config: EntityConfig }) {
             onSave={() => { void handleAssignCtype(); }}
             onClear={() => { setCtypeInput(''); void (async () => { await setCastleType(id!, null); setEntity((e) => e ? { ...e, castle_type_id: null } : e); })(); }}
             saving={assigningCtype}
+            searchApiPath="castle-types"
+            searchIdField="castle_type_id"
+            searchNameField="name"
           />
           <AssignRow
             label="Blueprint"
@@ -404,6 +426,9 @@ export default function DetailPage({ config }: { config: EntityConfig }) {
             onSave={() => { void handleAssignBlueprint(); }}
             onClear={() => { setBlueprintInput(''); void (async () => { await setCastleBlueprint(id!, null); setEntity((e) => e ? { ...e, blueprint_id: null } : e); })(); }}
             saving={assigningBlueprint}
+            searchApiPath="blueprints"
+            searchIdField="blueprint_id"
+            searchNameField="name"
           />
         </div>
       )}
@@ -522,9 +547,10 @@ export default function DetailPage({ config }: { config: EntityConfig }) {
                 const relEntityConfig = rel.targetPath
                   ? ENTITY_CONFIGS.find((c) => c.path === rel.targetPath) ?? null
                   : null;
+                const isStale = relStatus === 'Deprecated' || relStatus === 'Archived';
                 return (
                   <Fragment key={relId}>
-                    <div className="rel-item">
+                    <div className={`rel-item${isStale ? ' rel-item-stale' : ''}`}>
                       <div>
                         {relEntityConfig && rel.targetPath ? (
                           <div className="rel-name-row">
@@ -549,6 +575,7 @@ export default function DetailPage({ config }: { config: EntityConfig }) {
                         ) : (
                           <span className="rel-name no-link">{relName}</span>
                         )}
+                        <div className="rel-id-mono">{relId}</div>
                         {secondary && <div className="rel-secondary">{secondary}</div>}
                       </div>
                       <div className="rel-right">
@@ -579,26 +606,18 @@ export default function DetailPage({ config }: { config: EntityConfig }) {
               })
             )}
 
-            {rel.manageable && (
+            {rel.manageable && rel.targetPath && (
               <div className="rel-add-form">
-                <input
-                  className="search-input"
-                  style={{ flex: 1 }}
-                  placeholder={`Add by ${rel.idField}`}
-                  value={addInput[rel.label] ?? ''}
-                  onChange={(e) => setAddInput((p) => ({ ...p, [rel.label]: e.target.value }))}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleAddRel(rel); } }}
-                />
-                <button
-                  className="btn btn-secondary"
+                <RelPicker
+                  apiPath={rel.targetPath.slice(1)}
+                  idField={rel.idField}
+                  nameField={rel.nameField}
+                  secondaryField={rel.secondaryField}
+                  placeholder={`Search ${rel.label} to add…`}
                   disabled={addLoading[rel.label]}
-                  onClick={() => { void handleAddRel(rel); }}
-                >
-                  {addLoading[rel.label] ? '…' : 'Add'}
-                </button>
-                {addError[rel.label] && (
-                  <span style={{ color: '#f85149', fontSize: '0.78rem' }}>{addError[rel.label]}</span>
-                )}
+                  error={addError[rel.label]}
+                  onSelect={(relId) => { void handleAddRelWithId(rel, relId); }}
+                />
               </div>
             )}
           </div>

@@ -26,22 +26,50 @@ const ENTITY_TYPES_FOR_DEP_MAP = [
   'AtomicAsset', 'Compound', 'Composite', 'CastleService', 'CastleUnit',
 ];
 
+// ─── Value renderer ───────────────────────────────────────────────────────────
+
 function renderValue(key: string, val: unknown): React.ReactNode {
   if (STATUS_KEYS.has(key) && typeof val === 'string') return <StatusBadge status={val} />;
-  if (val === null || val === undefined || val === '') return '—';
-  if (typeof val === 'object') {
-    return (
-      <span style={{ fontFamily: 'monospace', fontSize: '0.73rem', color: '#8b949e' }}>
-        {JSON.stringify(val)}
-      </span>
-    );
+  if (val === null || val === undefined || val === '') return <span style={{ color: 'var(--text-faint)' }}>—</span>;
+  if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+  if (Array.isArray(val)) {
+    if (val.length === 0) return <span style={{ color: 'var(--text-faint)' }}>—</span>;
+    if (typeof val[0] === 'object' && val[0] !== null && 'name' in val[0]) {
+      return (
+        <span style={{ fontSize: '0.78rem', color: 'var(--text-sec)' }}>
+          {(val as { name: string }[]).map((v) => v.name).join(', ')}
+        </span>
+      );
+    }
+    return <span style={{ fontFamily: 'monospace', fontSize: '0.73rem', color: 'var(--text-sec)' }}>{JSON.stringify(val)}</span>;
+  }
+  if (typeof val === 'object' && val !== null) {
+    const obj = val as Record<string, unknown>;
+    if ('name' in obj && 'id' in obj) {
+      return (
+        <span>
+          {String(obj.name)}{' '}
+          <span style={{ fontFamily: 'monospace', fontSize: '0.73rem', color: 'var(--text-faint)' }}>({String(obj.id)})</span>
+        </span>
+      );
+    }
+    return <span style={{ fontFamily: 'monospace', fontSize: '0.73rem', color: 'var(--text-sec)' }}>{JSON.stringify(val)}</span>;
   }
   return String(val);
 }
 
+// ─── ArrayReport — flat table with null-column pruning ────────────────────────
+
 function ArrayReport({ data }: { data: Record<string, unknown>[] }) {
   if (data.length === 0) return <div className="empty-box">No results</div>;
-  const keys = Object.keys(data[0]);
+  const allKeys = Object.keys(data[0]);
+  // Drop columns where every row is null / undefined / ''
+  const keys = allKeys.filter((k) =>
+    data.some((row) => {
+      const v = row[k];
+      return v !== null && v !== undefined && v !== '';
+    }),
+  );
   return (
     <div className="table-wrap">
       <table>
@@ -59,6 +87,97 @@ function ArrayReport({ data }: { data: Record<string, unknown>[] }) {
     </div>
   );
 }
+
+// ─── SectionedReport — object whose values are arrays ─────────────────────────
+
+function SectionedReport({ data }: { data: Record<string, unknown> }) {
+  const entries = Object.entries(data);
+  const scalars = entries.filter(([, v]) => !Array.isArray(v));
+  const sections = entries.filter(([, v]) => Array.isArray(v));
+  const nonEmpty = sections.filter(([, v]) => (v as unknown[]).length > 0);
+  const total = sections.reduce((s, [, v]) => s + (v as unknown[]).length, 0);
+
+  return (
+    <div>
+      {/* Scalar summary chips */}
+      {scalars.length > 0 && (
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+          {scalars.map(([k, v]) => (
+            <span key={k} className="settings-count-chip" style={{ fontSize: '0.8rem' }}>
+              <span style={{ color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                {k.replace(/_/g, ' ')}:
+              </span>{' '}
+              <strong style={{ color: 'var(--text)' }}>{String(v)}</strong>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Section count bar */}
+      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+        {sections.map(([k, v]) => (
+          <span
+            key={k}
+            className="settings-count-chip"
+            style={{ opacity: (v as unknown[]).length === 0 ? 0.45 : 1 }}
+          >
+            {(v as unknown[]).length} {k.replace(/_/g, ' ')}
+          </span>
+        ))}
+      </div>
+
+      {total === 0 ? (
+        <div className="empty-box">No results</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {nonEmpty.map(([k, v]) => (
+            <div key={k} className="panel" style={{ marginBottom: 0 }}>
+              <div className="panel-header">
+                {k.replace(/_/g, ' ')}
+                <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>
+                  {(v as unknown[]).length}
+                </span>
+              </div>
+              <div style={{ padding: 0 }}>
+                <ArrayReport data={v as Record<string, unknown>[]} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── DuplicatesReport — [{normalized_name, entries:[]}] ───────────────────────
+
+type DuplicateGroup = { normalized_name: string; entries: Record<string, unknown>[] };
+
+function DuplicatesReport({ data }: { data: DuplicateGroup[] }) {
+  if (data.length === 0) return <div className="empty-box">No duplicates detected</div>;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <div style={{ marginBottom: '0.25rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+        {data.length} duplicate group{data.length !== 1 ? 's' : ''} found
+      </div>
+      {data.map((group) => (
+        <div key={group.normalized_name} className="panel" style={{ marginBottom: 0 }}>
+          <div className="panel-header">
+            <span style={{ fontFamily: 'monospace' }}>{group.normalized_name}</span>
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>
+              {group.entries.length} matches
+            </span>
+          </div>
+          <div style={{ padding: 0 }}>
+            <ArrayReport data={group.entries} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── ObjectReport — plain key-value table ─────────────────────────────────────
 
 function ObjectReport({ data }: { data: Record<string, unknown> }) {
   const entries = Object.entries(data);
@@ -80,12 +199,37 @@ function ObjectReport({ data }: { data: Record<string, unknown> }) {
   );
 }
 
+// ─── Smart dispatcher ─────────────────────────────────────────────────────────
+
 function renderReport(data: unknown): React.ReactNode {
   if (!data) return null;
+
+  // Duplicates: [{normalized_name, entries}]
+  if (
+    Array.isArray(data) &&
+    data.length > 0 &&
+    typeof data[0] === 'object' &&
+    data[0] !== null &&
+    'entries' in (data[0] as object)
+  ) {
+    return <DuplicatesReport data={data as DuplicateGroup[]} />;
+  }
+
   if (Array.isArray(data)) return <ArrayReport data={data as Record<string, unknown>[]} />;
-  if (typeof data === 'object') return <ObjectReport data={data as Record<string, unknown>} />;
-  return <pre style={{ color: '#e6edf3', fontSize: '0.83rem' }}>{String(data)}</pre>;
+
+  if (typeof data === 'object' && data !== null) {
+    const obj = data as Record<string, unknown>;
+    // If any value is an array → use sectioned view
+    if (Object.values(obj).some((v) => Array.isArray(v))) {
+      return <SectionedReport data={obj} />;
+    }
+    return <ObjectReport data={obj} />;
+  }
+
+  return <pre style={{ color: 'var(--text)', fontSize: '0.83rem' }}>{String(data)}</pre>;
 }
+
+// ─── Parameterised report panels ──────────────────────────────────────────────
 
 function BuildReadinessPanel() {
   const [castleId, setCastleId] = useState('');
@@ -166,6 +310,8 @@ function DependencyMapPanel() {
     </>
   );
 }
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ReportsPage() {
   const [active, setActive] = useState<ActiveTab>('deprecated');

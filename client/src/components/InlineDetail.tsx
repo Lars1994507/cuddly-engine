@@ -46,6 +46,7 @@ export default function InlineDetail({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedChipKey, setExpandedChipKey] = useState<string | null>(null);
+  const [codePreviewKey, setCodePreviewKey] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -126,6 +127,7 @@ export default function InlineDetail({
             ? items.find((item) => `${rel.label}:${String(item[rel.idField] ?? '')}` === expandedChipKey)
             : undefined;
           const expandedRelId = expandedItem ? String(expandedItem[rel.idField] ?? '') : '';
+          const codePreviewOpen = codePreviewKey !== null && items.some((item) => `${rel.label}:${String(item[rel.idField] ?? '')}` === codePreviewKey);
 
           return (
             <div key={rel.label} className="inline-section">
@@ -145,8 +147,10 @@ export default function InlineDetail({
                       const secondary = rel.secondaryField ? String(item[rel.secondaryField] ?? '') : '';
                       const chipKey = `${rel.label}:${relId}`;
                       const isActive = expandedChipKey === chipKey;
+                      const isStale = relStatus === 'Deprecated' || relStatus === 'Archived';
+                      const isCodeOpen = codePreviewKey === chipKey;
                       return (
-                        <div key={relId} className={`inline-rel-chip${isActive ? ' chip-active' : ''}`}>
+                        <div key={relId} className={`inline-rel-chip${isActive ? ' chip-active' : ''}${isStale ? ' chip-stale' : ''}`}>
                           {relEntityConfig ? (
                             <button
                               className="chip-expand-btn"
@@ -157,6 +161,7 @@ export default function InlineDetail({
                           ) : (
                             <span className="inline-rel-name no-link">{relName}</span>
                           )}
+                          <span className="chip-id-mono">{relId}</span>
                           {rel.targetPath && (
                             <Link
                               to={`${rel.targetPath}/${encodeURIComponent(relId)}`}
@@ -166,12 +171,22 @@ export default function InlineDetail({
                               ↗
                             </Link>
                           )}
+                          <button
+                            className={`code-preview-btn${isCodeOpen ? ' code-preview-active' : ''}`}
+                            title="Preview source"
+                            onClick={() => setCodePreviewKey(isCodeOpen ? null : chipKey)}
+                          >&lt;/&gt;</button>
                           {secondary && <span className="inline-rel-secondary">{secondary}</span>}
                           {relStatus && <StatusBadge status={relStatus} />}
                         </div>
                       );
                     })}
                   </div>
+                  {codePreviewOpen && (
+                    <div className="code-preview-dropdown">
+                      <span className="code-preview-placeholder">placeholder</span>
+                    </div>
+                  )}
                   {relEntityConfig && expandedRelId && (
                     <ChipDetail
                       config={relEntityConfig}

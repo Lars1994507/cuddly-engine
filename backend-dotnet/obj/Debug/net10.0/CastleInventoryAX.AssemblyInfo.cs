@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CastleInventoryAX")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6c964e88b57453dfa2aa1ea2c0e13ce3799ba2cf")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ccdb8d7630f43889970493c7b9dd9b0abc27d2b1")]
 [assembly: System.Reflection.AssemblyProductAttribute("CastleInventoryAX")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CastleInventoryAX")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

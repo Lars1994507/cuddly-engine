@@ -4,6 +4,7 @@ import type { EntityConfig, Field } from '../config';
 import { ENTITY_CONFIGS } from '../config';
 import { fetchById, fetchRelationship } from '../api';
 import StatusBadge from './StatusBadge';
+import CopyButton from './CopyButton';
 
 function renderCompact(field: Field, entity: Record<string, unknown>): string | null {
   const raw = entity[field.key];
@@ -31,6 +32,7 @@ export default function ChipDetail({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedChipKey, setExpandedChipKey] = useState<string | null>(null);
+  const [codePreviewKey, setCodePreviewKey] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -76,6 +78,7 @@ export default function ChipDetail({
         <div className="chip-detail-title">
           <span>{name}</span>
           <span className="chip-detail-id">{id}</span>
+          <CopyButton text={id} />
         </div>
         <div className="chip-detail-actions">
           {status && <StatusBadge status={status} />}
@@ -112,6 +115,7 @@ export default function ChipDetail({
             ? items.find((item) => `${rel.label}:${String(item[rel.idField] ?? '')}` === expandedChipKey)
             : undefined;
           const expandedRelId = expandedItem ? String(expandedItem[rel.idField] ?? '') : '';
+          const codePreviewOpen = codePreviewKey !== null && items.some((item) => String(item[rel.idField] ?? '') === codePreviewKey);
           return (
             <div key={rel.label} className="chip-detail-section">
               <div className="chip-detail-section-label">
@@ -124,20 +128,35 @@ export default function ChipDetail({
                   const relName = String(item[rel.nameField] ?? relId);
                   const chipKey = `${rel.label}:${relId}`;
                   const isActive = expandedChipKey === chipKey;
-                  if (relEntityConfig) {
-                    return (
+                  const itemStatus = String(item['status'] ?? '');
+                  const isStale = itemStatus === 'Deprecated' || itemStatus === 'Archived';
+                  const isCodeOpen = codePreviewKey === relId;
+                  return (
+                    <div key={relId} className="chip-pill-wrap">
+                      {relEntityConfig ? (
+                        <button
+                          className={`chip-detail-pill chip-detail-pill-btn${isActive ? ' chip-active' : ''}${isStale ? ' chip-stale' : ''}`}
+                          onClick={() => setExpandedChipKey(isActive ? null : chipKey)}
+                        >
+                          {relName}
+                        </button>
+                      ) : (
+                        <span className={`chip-detail-pill${isStale ? ' chip-stale' : ''}`}>{relName}</span>
+                      )}
                       <button
-                        key={relId}
-                        className={`chip-detail-pill chip-detail-pill-btn${isActive ? ' chip-active' : ''}`}
-                        onClick={() => setExpandedChipKey(isActive ? null : chipKey)}
-                      >
-                        {relName}
-                      </button>
-                    );
-                  }
-                  return <span key={relId} className="chip-detail-pill">{relName}</span>;
+                        className={`code-preview-btn${isCodeOpen ? ' code-preview-active' : ''}`}
+                        title="Preview source"
+                        onClick={() => setCodePreviewKey(isCodeOpen ? null : relId)}
+                      >&lt;/&gt;</button>
+                    </div>
+                  );
                 })}
               </div>
+              {codePreviewOpen && (
+                <div className="code-preview-dropdown">
+                  <span className="code-preview-placeholder">placeholder</span>
+                </div>
+              )}
               {relEntityConfig && expandedRelId && (
                 <ChipDetail
                   config={relEntityConfig}
