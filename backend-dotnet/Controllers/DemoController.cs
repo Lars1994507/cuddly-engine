@@ -493,7 +493,12 @@ public class DemoController(AppDbContext db) : ControllerBase
             var counts = await LoadDemo();
             return Ok(new { message = "Demo data loaded successfully", counts });
         }
-        catch (Exception ex) { return StatusCode(500, new { error = ex.Message }); }
+        catch (Exception ex)
+        {
+            var inner = ex.InnerException?.Message ?? "";
+            var detail = string.IsNullOrEmpty(inner) ? ex.Message : $"{ex.Message} | Inner: {inner}";
+            return StatusCode(500, new { error = detail });
+        }
     }
 
     [HttpPost("clear")]
